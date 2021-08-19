@@ -302,13 +302,13 @@ def rule_beautifier(leg_item,transfer_rules, transfer_list, rule_id_true):
     Rule beautifier adjusts rules for posterior updates.
     A list is generated with all rules for each level, if exists.
     This function helps transfer_update function to keep tracking on rules.
-    Return transfer_list, rule_id_true, rules choosed
+    Return transfer_list, rule_id_true, chosen rules
     leg_item: leg index
     transfer_rules: list of rules
     rule_id_true: once a rule is found we flag it as True status in order to used by any other leg
     '''      
     temp_lst = [] # temporary list of rules
-    rules_choosed = [] # list of rules searched for current leg index
+    rules_chosen = [] # list of rules searched for current leg index
     
     # exclude from the list all levels None returned by the query
     for item in transfer_rules:
@@ -329,7 +329,7 @@ def rule_beautifier(leg_item,transfer_rules, transfer_list, rule_id_true):
                     status = True # rule status
                     transfer_list.append([rule_id, max_duration, max_transfer, fare_cost,leg_item,rule_level,status])
                     rule_id_true.append(j[0])
-                    rules_choosed.append(transfer_list.index([j[0], j[9], j[10], j[11],leg_item,j[12],status]))
+                    rules_chosen.append(transfer_list.index([j[0], j[9], j[10], j[11],leg_item,j[12],status]))
                 else:
                     print('status is false')
                     rule_id = j[0]
@@ -338,10 +338,9 @@ def rule_beautifier(leg_item,transfer_rules, transfer_list, rule_id_true):
                     fare_cost = j[11]
                     rule_level = j[12]
                     status = False # status da regra
-                    rules_choosed.append(rule_id_true.index(j[0]))
-                # valid rules
-                #rules_choosed.append(transfer_list.index([j[0], j[9], j[10], j[11],leg_item,j[12],status]))
-    return transfer_list, rule_id_true, rules_choosed 
+                    rules_chosen.append(rule_id_true.index(j[0]))
+
+    return transfer_list, rule_id_true, rules_chosen 
 
 def transfer_update(rules_id_true,leg_item,leg_duration,flag,transfer_list,current_agency_id,current_route_type,current_route_id,current_stop_id,previous_agency_id,previous_route_type,previous_route_id,previous_stop_id,region_id, current_agency_name,previous_agency_name,c):   
     '''
@@ -372,21 +371,21 @@ def transfer_update(rules_id_true,leg_item,leg_duration,flag,transfer_list,curre
     # search for rules on TABLE: TRANSFER
     transfer_rules = lookup_transfer(current_agency_id,current_route_type,current_route_id,current_stop_id,previous_agency_id,previous_route_type,previous_route_id,previous_stop_id,region_id, current_agency_name,previous_agency_name,c)
     # update list of rules
-    tnsfr_lst, rl_id_true, rls_choosed = rule_beautifier(leg_item,transfer_rules, transfer_list,rules_id_true)
+    tnsfr_lst, rl_id_true, rls_chosen = rule_beautifier(leg_item,transfer_rules, transfer_list,rules_id_true)
     # verify if list of rules is empty
-    if rls_choosed:
-        cost = tnsfr_lst[rls_choosed[0]][3]
+    if rls_chosen:
+        cost = tnsfr_lst[rls_chosen[0]][3]
         flag = 1 #rule used
     else:
         flag = 0 # if rule is not used flag and cost equal to 0
         cost = None
     #update duration and transfer
-    if rls_choosed:
+    if rls_chosen:
         for i in range(len(tnsfr_lst)):
-            if tnsfr_lst[i][0] != tnsfr_lst[rls_choosed[0]][0]:
+            if tnsfr_lst[i][0] != tnsfr_lst[rls_chosen[0]][0]:
                 tnsfr_lst[i][1] -= leg_duration
             else:    
-            #if (tnsfr_lst[i][6]==True) and (tnsfr_lst[i][0] == rl_id_true[rls_choosed[0]]):
+
                 tnsfr_lst[i][1] -= leg_duration
                 tnsfr_lst[i][2] -= 1
     #update valid rules        
