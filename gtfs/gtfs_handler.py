@@ -651,7 +651,12 @@ class get:
         key = config['API']['key']
         coords = [(xmin, ymin), (xmin, ymax), (xmax, ymax), (xmax, ymin)]
         poly = Polygon(coords)
-        
+
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:66.0) Gecko/20100101 Firefox/66.0",
+            "Accept-Encoding": "*",
+            "Connection": "keep-alive"
+        }
 
         s = requests.Session()
         
@@ -693,21 +698,29 @@ class get:
         feed_info_lst = []
         
         for ids in location_ids:
+            
 
-
-            for attempt in range(4):    
-                response = s.get(
-                    url+'/v1/getFeeds',
-                    params = {'key': key, 'location' : ids, 'type': 'gtfs', 'limit': 200
-
-                    }
-                )
-                
-                try:
-                    feeds = response.json()['results']['feeds']
-                    break
+            for attempt in range(4):  
+                try:  
+                    response = s.get(
+                        url+'/v1/getFeeds',
+                        params = {'key': key, 'location' : ids, 'type': 'gtfs', 'limit': 100,
+                        },
+                        headers = headers
+                    )
+                    
+                    try:
+                        feeds = response.json()['results']['feeds']
+                        break
+                    except:
+                        print('Attempt ' + str(attempt))
+                        if attempt == 3:
+                            raise APITimeoutException('API Timed Out after 4 Attempts')
+                        else:
+                        
+                            time.sleep(7**attempt)
                 except:
-                    print('Attempt ' + attempt)
+                    print('Attempt ' + str(attempt))
                     if attempt == 3:
                         raise APITimeoutException('API Timed Out after 4 Attempts')
                     else:
@@ -748,7 +761,7 @@ class get:
                     #urllib.request.urlretrieve(api_url, dir)
                     dir_name = config[region]['gtfs_static'] + "/feeds_" + input_date + "/" + filename
 
-                    r = requests.get(api_url)
+                    r = requests.get(api_url, headers = headers)
                     with open(dir, 'wb') as outfile:
                         outfile.write(r.content)
     
@@ -835,7 +848,7 @@ class get:
                 dt_fetched = str(dt_time.strftime('%Y%m%d'))
                 dt_str = dt_fetched
                 api_url = vre_url + '/' + dt_fetched + '/download'
-                request = requests.get(api_url)
+                request = requests.get(api_url, headers = headers)
                 if request.status_code == 200:
                     break
                 else:
