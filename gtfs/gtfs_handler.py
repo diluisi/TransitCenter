@@ -352,13 +352,17 @@ class get:
                             
                             api_url = gtfs_url + agencies['id'] + '/' + dt_fetched + '/download'
                             dir = config[region]['gtfs_static'] + "/feeds_"+ input_date + "/" + filename + ".zip"
-                            urllib.request.urlretrieve(api_url, dir)
+                            r = requests.get(api_url)
+                            with open(dir, 'wb') as outfile:
+                                outfile.write(r.content)
                             break
                         elif attempt == 1:
                             bkwd_dt = str((datetime.strptime(dt_fetched, '%Y%m%d') + timedelta(days=1)).date().strftime('%Y%m%d'))   
                             api_url = gtfs_url + agencies['id'] + '/' + bkwd_dt+ '/download'
                             dir = config[region]['gtfs_static'] + "/feeds_" + input_date + "/" + filename + ".zip"
-                            urllib.request.urlretrieve(api_url, dir)
+                            r = requests.get(api_url)
+                            with open(dir, 'wb') as outfile:
+                                outfile.write(r.content)
                             dt_fetched = str((datetime.strptime(dt_fetched, '%Y%m%d') + timedelta(days=1)).date().strftime('%Y-%m-%d')) 
                             
                             break
@@ -366,7 +370,9 @@ class get:
                             fwd_dt = str((datetime.strptime(dt_fetched, '%Y%m%d') - timedelta(days=1)).date().strftime('%Y%m%d'))   
                             api_url = gtfs_url + agencies['id'] + '/' + fwd_dt + '/download'
                             dir = config[region]['gtfs_static'] + "/feeds_" + input_date + "/" + filename + ".zip"
-                            urllib.request.urlretrieve(api_url, dir)
+                            r = requests.get(api_url)
+                            with open(dir, 'wb') as outfile:
+                                outfile.write(r.content)
                             dt_fetched = str((datetime.strptime(dt_fetched, '%Y%m%d') - timedelta(days=1)).date().strftime('%Y-%m-%d'))   
                             break
                         else:
@@ -459,7 +465,9 @@ class get:
                         
             api_url = vre_url 
             dir = config[region]['gtfs_static'] + "/feeds_"+ input_date + "/" + 'virginia-railway-express_250' + ".zip"
-            urllib.request.urlretrieve(api_url, dir)
+            r = requests.get(api_url)
+            with open(dir, 'wb') as outfile:
+                outfile.write(r.content)
             dir_name = config[region]['gtfs_static'] + "/feeds_" + input_date + "/" + 'virginia-railway-express_250'
 
 
@@ -504,7 +512,9 @@ class get:
                         
             api_url = nice_url 
             dir = config[region]['gtfs_static'] + "/feeds_"+ input_date + "/" + 'nassau-inter-county-express_268' + ".zip"
-            urllib.request.urlretrieve(nice_url, dir)
+            r = requests.get(api_url)
+            with open(dir, 'wb') as outfile:
+                outfile.write(r.content)
             dir_name = config[region]['gtfs_static'] + "/feeds_" + input_date + "/" + 'nassau-inter-county-express_268' 
 
 
@@ -548,7 +558,9 @@ class get:
             print(name)            
             api_url = nj_rail_url 
             dir = config[region]['gtfs_static'] + "/feeds_"+ input_date + "/" +'nj-transit_408' + ".zip"
-            urllib.request.urlretrieve(api_url, dir)
+            r = requests.get(api_url)
+            with open(dir, 'wb') as outfile:
+                outfile.write(r.content)
             dir_name = config[region]['gtfs_static'] + "/feeds_" + input_date + "/" +'nj-transit_408' 
             # try:
             #     shutil.unpack_archive(dir_name + '.zip', dir_name)
@@ -592,7 +604,9 @@ class get:
             print(name)
             api_url = nj_bus_url 
             dir = config[region]['gtfs_static'] + "/feeds_"+ input_date + "/" + 'nj-transit_409' + ".zip"
-            urllib.request.urlretrieve(api_url, dir)
+            r = requests.get(api_url)
+            with open(dir, 'wb') as outfile:
+                outfile.write(r.content)
             dir_name = config[region]['gtfs_static'] + "/feeds_" + input_date + "/" + 'nj-transit_409' 
             # try:
             #     shutil.unpack_archive(dir_name + '.zip', dir_name)
@@ -638,29 +652,41 @@ class get:
         coords = [(xmin, ymin), (xmin, ymax), (xmax, ymax), (xmax, ymin)]
         poly = Polygon(coords)
         
+
         s = requests.Session()
         
         url = 'https://api.transitfeeds.com'
         gtfs_url = 'https://transitfeeds.com/p/'
         
-        response = s.get(
-            url+'/v1/getLocations',
-            params = {'key': key
-               
-            }
-        )
+        for attempt in range(5):
+
+            response = s.get(
+                url+'/v1/getLocations',
+                params = {'key': key
+                
+                }
+            )
 
 
-        locations = response.json()['results']['locations']
-        sleep(15)
-        # filters locations to only those within bounding box
+            locations = response.json()['results']['locations']
+            sleep(15)
+            # filters locations to only those within bounding box
 
-        location_ids = []
-        for operator in locations:
-            pt = Point(operator['lng'], operator['lat'])
-            if pt.within(poly) is True: 
-                location_ids.append(operator['id'])
-        
+            location_ids = []
+            for operator in locations:
+                pt = Point(operator['lng'], operator['lat'])
+                if pt.within(poly) is True: 
+                    location_ids.append(operator['id'])
+            print(location_ids)
+            if len(location_ids) > 0:
+                break
+            
+            elif attempt == 3:
+                raise APITimeoutException('API Timed Out after 4 Attempts')
+            else:
+                time.sleep(7**attempt)
+
+            
         os.makedirs(config[region]['gtfs_static'] + "/feeds_" + input_date, exist_ok=True)
         
         # loops through all locations
@@ -717,15 +743,21 @@ class get:
                 
                 if update == True:
                     api_url = gtfs_url + agencies['id'] + '/' + dt_fetched + '/download'
+
                     dir = config[region]['gtfs_static'] + "/feeds_"+ input_date + "/" + filename + ".zip"
-                    urllib.request.urlretrieve(api_url, dir)
-    
-    
+                    #urllib.request.urlretrieve(api_url, dir)
                     dir_name = config[region]['gtfs_static'] + "/feeds_" + input_date + "/" + filename
+
+                    r = requests.get(api_url)
+                    with open(dir, 'wb') as outfile:
+                        outfile.write(r.content)
+    
+                    
                     try:
+
+                        shutil.unpack_archive(dir_name + '.zip', dir_name)
                         try:
-                            shutil.unpack_archive(dir_name + '.zip', dir_name)
-        
+
                             stops = pd.read_csv(dir_name + '/stops.txt', dtype={'stop_id': str})
                             try:
                                 os.remove(dir_name + '/pathways.txt')
@@ -748,29 +780,33 @@ class get:
                                     stops.at[index, 'stop_lat'] = 0
                                     stops.at[index, 'stop_lon'] = 0
         
-                            feed_txt_lst = []
-                            feed_publisher_name = name
-                            feed_publisher_url = 'https://www.google.com'
-                            feed_lang = 'EN'
-                            feed_startdate = '20200101'
-                            feed_enddate = '20220101'
-                            feed_version = '1'
-                            feed_id = agencies['id']
-                            feed_txt_lst.append(list([feed_publisher_name, feed_publisher_url, feed_lang, feed_startdate, feed_enddate, feed_version, feed_id]))
-                            feed_txt = pd.DataFrame(feed_txt_lst, columns = ['feed_publisher_name' , 'feed_publisher_url', 'feed_lang', 'feed_start_date', 'feed_end_date', 'feed_version','feed_id']) 
-                            feed_txt.to_csv(dir_name+'/feed_info.txt', index = False)
+
                             
                             stops.to_csv(dir_name+'/stops.txt', index = False)
         
-                            shutil.make_archive(dir_name, 'zip', dir_name)
-        
-                            shutil.rmtree(dir_name)
+
                         except:
                             dt_st = None
                             dt_end = None
                             op_url = None
                             num_stops = 2
-                            shutil.rmtree(dir_name)
+
+
+                        feed_txt_lst = []
+                        feed_publisher_name = name
+                        feed_publisher_url = 'https://www.google.com'
+                        feed_lang = 'EN'
+                        feed_startdate = '20200101'
+                        feed_enddate = '20220101'
+                        feed_version = '1'
+                        feed_id = agencies['id']
+                        feed_txt_lst.append(list([feed_publisher_name, feed_publisher_url, feed_lang, feed_startdate, feed_enddate, feed_version, feed_id]))
+                        feed_txt = pd.DataFrame(feed_txt_lst, columns = ['feed_publisher_name' , 'feed_publisher_url', 'feed_lang', 'feed_start_date', 'feed_end_date', 'feed_version','feed_id']) 
+                        feed_txt.to_csv(dir_name+'/feed_info.txt', index = False)
+                        
+                        shutil.make_archive(dir_name, 'zip', dir_name)
+    
+                        shutil.rmtree(dir_name)
                     except:
                         dt_st = None
                         dt_end = None
@@ -809,7 +845,9 @@ class get:
             dir = config[region]['gtfs_static'] + "/feeds_"+ input_date + "/" + 'virginia-railway-express_250' + ".zip"
             urllib.request.urlretrieve(api_url, dir)
             dir_name = config[region]['gtfs_static'] + "/feeds_" + input_date + "/" + 'virginia-railway-express_250' 
-
+            r = requests.get(api_url)
+            with open(dir, 'wb') as outfile:
+                outfile.write(r.content)
 
 
             try:          
