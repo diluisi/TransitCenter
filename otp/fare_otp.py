@@ -316,19 +316,21 @@ if __name__ == '__main__':
             result = []
             thread_lst_lowcost = []
             result_lowcost = []
-            
-            # parralelizing the otp plan call
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                thread_list = executor.map(return_itineraries, param)
-                result = list(thread_lst)
+
+	    #### issue with parralizing the return_itetineraries(param) function call below, revise before using ####
+	    #### see revised code in TEDv2 using r5py
+            # # parralelizing the otp plan call
+            # with concurrent.futures.ThreadPoolExecutor() as executor:
+            #     thread_list = executor.map(return_itineraries, param)
+            #     result = list(thread_lst)
 
                     
 
             
-            #lowcost network calculations
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                thread_list_lowcost = executor.map(return_lowcost, param)
-                result_lowcost = list(thread_lst_lowcost)
+            # #lowcost network calculations
+            # with concurrent.futures.ThreadPoolExecutor() as executor:
+            #     thread_list_lowcost = executor.map(return_lowcost, param)
+            #     result_lowcost = list(thread_lst_lowcost)
                     
 
                     
