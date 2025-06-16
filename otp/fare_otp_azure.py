@@ -316,29 +316,31 @@ if __name__ == '__main__':
             result = []
             thread_lst_lowcost = []
             result_lowcost = []
-            
-            # parralelizing the otp plan call
-            with concurrent.futures.ThreadPoolExecutor() as executor:
 
-                for i in range(threads):
-                     thread_lst.append(executor.submit(return_itineraries, param))
-                for f in concurrent.futures.as_completed(thread_lst):
-                     # retrieving the information from each thread for the otp call
-                     try:
-                         result.append(f.result())
-                     except:
-                         pass
+	    #### issue with parralizing the return_itetineraries(param) function call below, revise before using ####
+	    #### see revised code in TEDv2 using r5py
+            # parralelizing the otp plan call
+            # with concurrent.futures.ThreadPoolExecutor() as executor:
+
+            #     for i in range(threads):
+            #          thread_lst.append(executor.submit(return_itineraries, param))
+            #     for f in concurrent.futures.as_completed(thread_lst):
+            #          # retrieving the information from each thread for the otp call
+            #          try:
+            #              result.append(f.result())
+            #          except:
+            #              pass
             
-            #lowcost network calculations
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                 for i in range(threads):
-                     thread_lst_lowcost.append(executor.submit(return_lowcost, param))
-                for f in concurrent.futures.as_completed(thread_lst_lowcost):
-                     # retrieving the information from each thread for the otp call
-                     try:
-                         result_lowcost.append(f.result())
-                     except:
-                         pass
+            # #lowcost network calculations
+            # with concurrent.futures.ThreadPoolExecutor() as executor:
+            #      for i in range(threads):
+            #          thread_lst_lowcost.append(executor.submit(return_lowcost, param))
+            #     for f in concurrent.futures.as_completed(thread_lst_lowcost):
+            #          # retrieving the information from each thread for the otp call
+            #          try:
+            #              result_lowcost.append(f.result())
+            #          except:
+            #              pass
                     
 
                     
