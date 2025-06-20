@@ -317,8 +317,10 @@ if __name__ == '__main__':
             thread_lst_lowcost = []
             result_lowcost = []
 
-	    #### issue with parralizing the return_itetineraries(param) function call below, revise before using ####
-	    #### see revised code in TEDv2 using r5py
+	    #### issue with parallelizing the return_itetineraries(param) function call below, revise code below before using ####
+	    #### issue was the parallelizing across multiple cores returning a different itenerary than the one for fed in OD pair
+	    #### can still use return_itineraries(param) if not parallelizing (run on single core outside the concurrent futures loop
+	    #### see revised code in TEDv2 repository using r5py and runs much faster. Version 2 of dashboard produces corrected results
             # parralelizing the otp plan call
             # with concurrent.futures.ThreadPoolExecutor() as executor:
 
